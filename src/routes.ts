@@ -1,8 +1,8 @@
-import { createUserSchema } from './schema/user';
 import { Express, Request, Response } from 'express';
-import { createUserHandler } from './controller/user';
 import { validate } from './middleware/validateResource';
 import { StatusCodes, ReasonPhrases } from 'http-status-codes';
+import { authUserSchema, createUserSchema } from './schema/user';
+import { authHandler, createUserHandler } from './controller/user';
 
 export default function routes(app: Express) {
   app.get('/health', (req: Request, res: Response) => {
@@ -10,4 +10,5 @@ export default function routes(app: Express) {
   });
 
   app.post('/users', validate(createUserSchema), createUserHandler);
+  app.post('/auth', validate(authUserSchema), authHandler);
 }

@@ -19,7 +19,20 @@ export const createUserSchema = object({
   }),
 });
 
+export const authUserSchema = object({
+  body: object({
+    email: string({
+      required_error: validationErrors.fieldIsRequired('email'),
+    }).email(validationErrors.notValidEmail),
+    password: string({
+      required_error: validationErrors.fieldIsRequired('password'),
+    }).min(MIN_PASSWORD_LENGTH),
+  }),
+});
+
 export type CreateUserInput = Omit<
   TypeOf<typeof createUserSchema>,
   'body.passwordConfirmation'
 >;
+
+export type AuthUserInput = TypeOf<typeof authUserSchema>;
