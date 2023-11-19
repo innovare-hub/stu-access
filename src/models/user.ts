@@ -47,14 +47,11 @@ userSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
   try {
-    console.log(this);
-    return true;
-
     const result = await bcrypt.compare(candidatePassword, this.password);
+
     return result;
   } catch (e) {
     console.log('throwing...');
-
     throw e;
   }
 };

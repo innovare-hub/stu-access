@@ -41,7 +41,9 @@ export async function authHandler(
         .json({ message: validationErrors.noUser });
     }
 
-    const didPasswordsMatch = UserModel.prototype.comparePassword(password);
+    const didPasswordsMatch = await UserModel.prototype.comparePassword(
+      password
+    );
 
     if (!didPasswordsMatch) {
       return res
