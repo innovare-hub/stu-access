@@ -1,12 +1,15 @@
 import logger from '../utils/logger';
 import { createJWT } from '../utils';
-import UserModel from '../models/user';
 import { Request, Response } from 'express';
 import { OBJECT_ID_REGEX } from '../constants';
 import { validationErrors } from '../constants/errorMessages';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { AuthUserInput, CreateUserInput } from '../schema/user';
-import { createUser, getUserByEmail, getUserById } from '../service/user';
+import {
+  createUser,
+  getUserById,
+  validatePasswordAndGetUser,
+} from '../service/user';
 
 export async function createUserHandler(
   req: Request<{}, {}, CreateUserInput['body']>,
@@ -32,32 +35,26 @@ export async function authHandler(
   try {
     const { email, password } = req.body;
 
-    // Check if the user with the provided email exists
-    const user = await getUserByEmail(email);
-
-    if (!user) {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ message: validationErrors.noUser });
-    }
-
-    const didPasswordsMatch = await UserModel.prototype.comparePassword(
-      password
-    );
-
-    if (!didPasswordsMatch) {
-      return res
-        .status(StatusCodes.UNAUTHORIZED)
-        .json({ message: validationErrors.passwordsNoMatch });
-    }
+    const user = await validatePasswordAndGetUser(email, password);
 
     // If password matches, assign and send the access token
     const payload = { _id: user._id, email };
     const accessToken = createJWT(payload);
 
     return res.status(StatusCodes.OK).json({ accessToken });
-  } catch (error) {
-    console.error(error); // Log the error for debugging
+  } catch (error: any) {
+    const { message } = error;
+
+    if (message === ReasonPhrases.NOT_FOUND) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: validationErrors.noUser });
+    } else if (message === ReasonPhrases.UNAUTHORIZED) {
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ message: validationErrors.passwordsNoMatch });
+    }
+
     return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ message: ReasonPhrases.INTERNAL_SERVER_ERROR });

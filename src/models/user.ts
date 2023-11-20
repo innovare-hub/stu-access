@@ -4,7 +4,6 @@ import mongoose from 'mongoose';
 export interface UserInput {
   email: string;
   password: string;
-  comparePassword(candidatePassword: string): Promise<Boolean>; // ref:https://youtu.be/BWUi6BS9T5Y?t=2033
 }
 
 export interface UserDocument extends UserInput, mongoose.Document {
@@ -42,19 +41,6 @@ userSchema.pre('save', async function (next) {
 
   return next();
 });
-
-userSchema.methods.comparePassword = async function (
-  candidatePassword: string
-): Promise<boolean> {
-  try {
-    const result = await bcrypt.compare(candidatePassword, this.password);
-
-    return result;
-  } catch (e) {
-    console.log('throwing...');
-    throw e;
-  }
-};
 
 const UserModel = mongoose.model<UserDocument>('User', userSchema);
 
